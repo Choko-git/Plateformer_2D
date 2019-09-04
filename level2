@@ -1,0 +1,191 @@
+var mainState = {
+    preload: function() {
+        game.load.image("background2", "assets/background2.png");
+        game.load.image('player', 'assets/player.png');
+        game.load.image('murs', 'assets/murs.png') ;
+        game.load.image('billet', 'assets/billet.png') ;
+        game.load.image('enemie', 'assets/enemie.png') ;
+        game.load.image('win', 'assets/porte.png') ;
+        game.load.image('levelun', 'assets/porte.png') ;
+        game.load.image('exit', 'assets/porte.png')
+    },
+
+    create: function() {
+        background2 = game.add.tileSprite(0, 0, 1200, 1000, "background2");
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        game.world.enableBody = true;
+
+        this.cursor = game.input.keyboard.createCursorKeys();
+        this.player = game.add.sprite(100, 100, 'player');
+        this.player.anchor.setTo(.5,.5);
+        this.player.body.gravity.y = 800;
+        
+        this.murs = game.add.group();
+        this.billets = game.add.group();
+        this.enemies = game.add.group();
+        this.win = game.add.group();
+
+        game.time.events.loop(Phaser.Timer.SECOND / 100, updateCounter, this);
+        var timerDisplay = 3000;
+        var timer = 0;
+        var billetsAmount = 0
+
+        var level = [
+            '                                       ',
+            ' xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  ',
+            ' x           !  !                 x      ! ',
+            ' x             !             xx   x   o  ! ',
+            ' x  o     ! xx     !xx!     xx    x      ! ',
+            ' x             xx          xx     x   o  ! ',
+            ' xxxxxxx               !  xx      x      ! ',
+            '       xyxx!x!x!x!x!x!x! xx           o  ! ',
+            '       x                !xxxxxxxxxxxxxx  ! ',
+            '       xxxxxxxxxxyyxxxxxxxx              ! ',
+            ' ! x              x      !x xxxxxxxxxxx  !',
+            'x! ! o o ooooooooox      !x          x  !! ',
+            'x!!!xxxxxxxxxxxxxyx      !xxxxxxxxxx xx!',
+            '                         !x          x!',
+            '                     o   !x xxxxxxxxxx!',
+            '              x          !x          x!',
+            'xxx!xxxxxx!  !xxxx       !xxxxxxxxxx x!',
+            'xx        x      x       !x          x!',
+            'x  x       x     xxx     !x xxxxxxxxxx!',
+            'x xx      !x xx  x                   x!',
+            'x  x x     !     x o                 x!',
+            'xx            x  xxx                 x!',
+            'x   x  x  xx  x  xx                   x!',
+            'x xxx!ox    x!x  x      ! o !       x!',
+            'x    x  x     x  xxxxxxxxxxxxxxxxxxxxx!',
+            'y w   x  x    x  x                     ',
+            'y         x      x                     ',
+            'xxxxxxxxxxxxxxxxxx                     ',
+            '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+           
+        ]
+
+		for (var i = 0; i < level.length; i++) {
+            for (var j = 0; j < level[i].length; j++) {
+                if (level[i][j] == 'y') {
+                    var murs = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'murs');
+                    this.murs.add(murs);
+                    murs.body.immovable = false;
+				}
+			}
+		}
+        for (var i = 0; i < level.length; i++) {
+            for (var j = 0; j < level[i].length; j++) {
+                if (level[i][j] == 'x') {
+                    var murs = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'murs');
+                    this.murs.add(murs);
+                    murs.body.immovable = true;
+                }
+                else if (level[i][j] == 'o') {
+                    var billet = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'billet');
+                    this.billets.add(billet);
+                }
+                else if (level[i][j] == '!') {
+                    var enemie = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'enemie');
+                    this.enemies.add(enemie);
+                }
+                else if (level[i][j] == 'w') {
+                    var win = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'win');
+                    this.win.add(win);
+                }
+               
+			   
+            }
+        }
+        
+        time = game.add.text (10, 10, 'SCORE ' + timer, {fontSize: "25px", fill: "#fff"});
+        money = game.add.text (200, 10, 'Billet ' + billetsAmount + "/8", {fontSize: "25px", fill: "#fff"});
+        
+    },
+
+    
+    update: function() {
+        game.physics.arcade.collide(this.player, this.murs);
+        game.physics.arcade.overlap(this.player, this.billets, this.takebillet, this.updateMoney, null, this);
+        game.physics.arcade.overlap(this.player, this.enemies, this.restart, null, this);
+        game.physics.arcade.overlap(this.player, this.win, this.takeFlag,null, this);
+
+        if (this.cursor.left.isDown){
+            this.player.body.velocity.x = -200;
+            this.player.scale.setTo(-1,1);
+        }
+        else if (this.cursor.right.isDown){
+            this.player.body.velocity.x = 200;
+            this.player.scale.setTo(1,1);
+        }
+        else
+            this.player.body.velocity.x = 0;
+
+        if (this.cursor.up.isDown && (this.player.body.touching.down || this.player.body.touching.left || this.player.body.touching.right))
+            this.player.body.velocity.y = -250;
+    },
+
+    endLevel: function() {
+        window.location.replace("level2end.html");
+    },
+
+    takebillet: function(player, billet) {
+        billet.kill();
+        var audio = new Audio('assets/billet_sound.mp3');
+        audio.play();
+        billetsAmount++;
+        money.setText("Billet " + billetsAmount+ "/8");
+
+    },
+
+    takeFlag: function(player, win) {
+        if (billetsAmount >= 8) {
+            win.kill();
+            player.kill();
+            money.kill();
+            var audio = new Audio('assets/win_sound.mp3');
+            game.add.text (250, 10, "Bravo ! Ton score est de " + timerDisplay, {fontSize: "25px", fill: "#fff"});
+            audio.play();
+            winState=1;
+            setTimeout(this.endLevel, 3000);
+        }
+        else {
+            money.kill();
+            time.kill();
+            game.add.text (10, 10, "ESSAIE ENCORE", {fontSize: "25px", fill: "#fff"});
+            game.add.text (250, 10, "Tu n'as pas ramassé tous les billet!", {fontSize: "25px", fill: "#fff"});
+            win.kill();
+            player.kill();
+            winState = 1;
+            setTimeout(this.restart, 2000);
+        }
+     
+    },
+
+    restart: function() {
+        game.state.start('main');
+        restartState = 1
+        winState=0
+        timerDisplay = 3000
+        billetsAmount = 0
+    },
+    
+};
+
+function updateCounter() {
+    if (winState != 1){
+        timerDisplay--;
+        time.setText("SCORE " + timerDisplay);
+        if (timerDisplay <= 0)
+            game.state.start('main');
+        if (timerDisplay <= -1)
+            timerDisplay = 3000;
+    }
+ 
+};
+var timerDisplay = 3000
+var billetsAmount = 0
+var updateTimer = 0
+var winState = 0
+var restartState = 0
+var game = new Phaser.Game(1000, 800);
+game.state.add('main', mainState);
+game.state.start('main');
