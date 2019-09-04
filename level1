@@ -1,0 +1,160 @@
+var mainState = {
+    preload: function() {
+        game.load.image("background2", "assets/background2.png");
+        game.load.image('player', 'assets/player.png');
+        game.load.image('mur', 'assets/murs.png') ;
+        game.load.image('billet', 'assets/billet.png') ;
+        game.load.image('enemie', 'assets/enemie.png') ;
+        game.load.image('win', 'assets/porte.png') ;
+        game.load.image('levelun', 'assets/porte.png') ;
+        game.load.image('exit', 'assets/porte.png');
+		
+    },
+
+    create: function() {
+        background = game.add.tileSprite(0, 0, 1200, 1000, "background2");
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        game.world.enableBody = true;
+
+        this.cursor = game.input.keyboard.createCursorKeys();
+        this.player = game.add.sprite(50, 100, 'player');
+        this.player.body.gravity.y = 800;
+        
+        this.murs = game.add.group();
+        this.billets = game.add.group();
+        this.enemies = game.add.group();
+        this.win = game.add.group();
+
+        var billetsAmount = 0
+
+        var level = [
+            'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  xxxxxxx',
+            'x             x                          x',
+            'x             xxxxxxxxxxxxxxxxxxxxxxxxx  x',
+            'x      xxxxx                      xxxx o x',
+            'x     xx                             x   x',
+            'xxx   x                            x x  x',
+            '  x   x                          x   x  x',
+            '  x   x                        x        x',
+            '  x   x                                 x',
+            '  x   x   xxx               x        x  x',
+            '  x   x                              x  x',
+            '  x   x                       x      x  x',
+            '  x   x                           x  x  x',
+            '  x   x                         x    x  x',
+            '  x   x                    o  x      x  x',
+            '  x   x              x  x  x         x  x',
+            '  x   x             x!!!!!!!!!!!!!!!x   x',
+            '  x   x             x               x   x',
+            '  x   x            xx               x   x',
+            '  x   x             x               x   x',
+            '  x   x          xx x               x   x',
+            '  x   x             !               x   x',
+            '  x   x     x     x         xxx     x   x',
+            '  x o x  o  x     x         x x         x',
+            '  x   x     x     x         x x         x',
+            '  x   x     x   w x    !    x x      o   ',
+            '  x         xxxxxxx       o      x x  x x',
+            '  xxx  xxx                x			 x',
+            '  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+        ]
+
+        for (var i = 0; i < level.length; i++) {
+            for (var j = 0; j < level[i].length; j++) {
+                if (level[i][j] == 'x') {
+                    var mur = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'mur');
+                    this.murs.add(mur);
+                    mur.body.immovable = true;
+                }
+                else if (level[i][j] == 'o') {
+                    var billet = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'billet');
+                    this.billets.add(billet);
+                }
+                else if (level[i][j] == '!') {
+                    var enemie = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'enemie');
+                    this.enemies.add(enemie);
+                }
+                else if (level[i][j] == 'w') {
+                    var win = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'win');
+                    this.win.add(win);
+                }
+
+            }
+        }
+        
+        money = game.add.text (10, 10, 'billet ' + billetsAmount+ "/2", {fontSize: "25px", fill: "#fff"});
+        
+        
+    },
+
+    
+    update: function() {
+        game.physics.arcade.collide(this.player, this.murs);
+        game.physics.arcade.overlap(this.player, this.billets, this.takebillet, this.updateMoney, null, this);
+        game.physics.arcade.overlap(this.player, this.enemies, this.restart, null, this);
+        game.physics.arcade.overlap(this.player, this.win, this.takeFlag,null, this);
+        
+        if (this.cursor.left.isDown)
+            this.player.body.velocity.x = -200;
+        else if (this.cursor.right.isDown)
+            this.player.body.velocity.x = 200;
+        else
+            this.player.body.velocity.x = 0;
+
+        if (this.cursor.up.isDown && (this.player.body.touching.down || this.player.body.touching.left || this.player.body.touching.right))
+            this.player.body.velocity.y = -250;
+    },
+
+
+    endLevel: function() {
+        window.location.replace("level1end.html");
+    },
+
+    takebillet: function(player, billet) {
+        billet.kill();
+        var audio = new Audio('assets/billet_sound.mp3');
+        audio.play();
+        billetsAmount++;
+        money.setText("fait par NUNES Thomas et personne d'autres billet " + billetsAmount+ "/6");
+		
+    },
+
+    takeFlag: function(player, win) {
+        if (billetsAmount >= 6) {
+            win.kill();
+            player.kill();
+            money.kill();
+            var audio = new Audio('assets/win_sound.mp3');
+            audio.play();
+            winState=1;
+             setTimeout(this.endLevel, 3000);
+        }
+        else {
+            money.kill();         
+            game.add.text (10, 10, "ESSAIE ENCORE", {fontSize: "25px", fill: "#fff"});
+            game.add.text (200, 150, "Tu n'as pas ramassé tous les billet!", {fontSize: "25px", fill: "#fff"});
+            win.kill();
+            player.kill();
+            winState = 1;
+			
+        }
+     
+    },
+
+    restart: function() {
+        game.state.start('main');
+        restartState = 1
+        winState=0
+        billetsAmount = 0
+    }
+	
+    
+};
+
+	
+var billetsAmount = 0
+var winState = 0
+var restartState = 0
+var game = new Phaser.Game(1000, 800);
+game.state.add('main', mainState);
+game.state.start('main');
