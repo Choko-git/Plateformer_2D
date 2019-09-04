@@ -1,0 +1,145 @@
+var mainState = {
+    preload: function() {
+        game.load.image("background2", "assets/background2.png");
+        game.load.image('player', 'assets/player.png');
+        game.load.image('murs', 'assets/murs.png') ;
+        game.load.image('billet', 'assets/billet.png') ;
+        game.load.image('enemie', 'assets/enemie.png') ;
+        game.load.image('win', 'assets/porte.png') ;
+        game.load.image('levelun', 'assets/porte.png') ;
+        game.load.image('exit', 'assets/porte.png')
+    },
+
+    create: function() {
+        background2 = game.add.tileSprite(0, 0, 1200, 1000, "background2");
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        game.world.enableBody = true;
+
+        this.cursor = game.input.keyboard.createCursorKeys();
+        this.player = game.add.sprite(300, 120, 'player');
+        this.player.body.gravity.y = 800;
+        
+        this.murs = game.add.group();
+        this.enemies = game.add.group();
+        this.win = game.add.group();
+        this.levelun = game.add.group();
+        this.exit = game.add.group();
+        
+        mursjump = game.add.text(30,50,"W \nA \nL \nL \nJ \nU \nM \nP ", {fontSize: "50px", fill: "#fff"});
+        level1 = game.add.text(540,70,"Rejouer le        v\nniveau 1           v", {fontSize: "25px", fill: "#fff"});
+        level2 = game.add.text(555,250,"Vers le           v\nniveau 2        v", {fontSize: "25px", fill: "#fff"});
+        level3 = game.add.text(555,450,"Quitter           v\nle château     v", {fontSize: "25px", fill: "#fff"});
+		level4 = game.add.text(200, 600,"Fait par : NUNES Thomas et \n personne d'autres",{fontSize: "25px", fill: "#fff"});
+        
+        var level = [
+            '   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                    1           x ', 
+            '   x                                x ',
+            '   x        xxxxxxxxxxxxxxxxxxxxxxxxx',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                     w          x ', 
+            '   x                                x ',
+            '   x        xxxxxxxxxxxxxxxxxxxxxxxxx ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                                x ',
+            '   x                 e              x ', 
+            '   x                                x ',
+            '   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ',
+            '                                      ',
+        ]
+
+        for (var i = 0; i < level.length; i++) {
+            for (var j = 0; j < level[i].length; j++) {
+                if (level[i][j] == 'x') {
+                    var murs = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'murs');
+                    this.murs.add(murs);
+                    murs.body.immovable = true;
+                }
+                else if (level[i][j] == '!') {
+                    var enemie = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'enemie');
+                    this.enemies.add(enemie);
+                }
+                else if (level[i][j] == 'w') {
+                    var win = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'win');
+                    this.win.add(win);
+                }
+                else if (level[i][j] == '1') {
+                    var levelun = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'levelun');
+                    this.levelun.add(levelun);
+                }
+                else if (level[i][j] == 'e') {
+                    var exit = game.add.sprite(30 + 20 * j, 30 + 20 * i, 'exit');
+                    this.exit.add(exit);
+                }
+            }
+        }
+
+    },
+
+    
+    update: function() {
+        game.physics.arcade.collide(this.player, this.murs);
+        game.physics.arcade.overlap(this.player, this.enemies, this.restart, null, this);
+        game.physics.arcade.overlap(this.player, this.win, this.takeFlag, null, this);
+        game.physics.arcade.overlap(this.player, this.levelun, this.goToLevel1, null, this);
+        game.physics.arcade.overlap(this.player, this.exit, this.goToexit, null, this);
+
+        if (this.cursor.left.isDown)
+            this.player.body.velocity.x = -200;
+        else if (this.cursor.right.isDown)
+            this.player.body.velocity.x = 200;
+        else
+            this.player.body.velocity.x = 0;
+
+        if (this.cursor.up.isDown)
+            this.player.body.velocity.y = -250;
+        else if (this.cursor.down.isDown)
+            this.player.body.velocity.y = 250;
+    },
+
+    takeFlag: function(player, win) {
+        win.kill();
+        player.kill();
+        setTimeout(this.loadLevel2, 10);
+     
+    },
+
+    goToLevel1: function(player, levelun) {
+        levelun.kill();
+        player.kill();
+        setTimeout(this.loadLevel1, 10);
+     
+    },
+
+    loadLevel1: function() {
+        window.location.replace("level1.html");
+    },
+
+    loadLevel2: function() {
+        window.location.replace("level2.html");
+    },
+    goToexit:function(){
+        window.location.href = "../index.html";
+    }
+
+
+    
+};
+var game = new Phaser.Game(1000, 800);
+game.state.add('main', mainState);
+game.state.start('main');
